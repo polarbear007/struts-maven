@@ -1,0 +1,69 @@
+这是struts 演示项目，演示struts 的一些基本操作
+
+1、 struts 使用版本： 2.3 版本，一定不能太高，2.5版本的struts 用法跟以前的不一定，会一直报404
+
+2、 struts 的jar 包： 直接去 struts 包下的apps 目录下，解压 blank.war , 然后复制里面的jar 包即可
+
+3、 struts.xml 的创建：
+		① 在src 目录下创建 struts.xml  文件
+		② 去 xwork-core.jar 包下找到   xwork-2.3.dtd 文件，复制文件头到 struts.xml 文件里
+		③ 随便建个 package 标签
+		
+4、 如果我们创建的web项目版本是3.0 或者更高版本，那么我们需要自己去web-inf目录下创建一个 web.xml 文件
+      并在web.xml 里面添加如下的内容：
+	<?xml version="1.0" encoding="UTF-8"?>
+	<web-app id="WebApp_9" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+		   <filter>
+		   		<filter-name>struts2</filter-name>
+		   		<filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+		   </filter>
+			
+			<filter-mapping>
+				<filter-name>struts2</filter-name>
+				<url-pattern>/*</url-pattern>
+			</filter-mapping>
+	</web-app>
+
+
+5、 创建 HelloAction.java 类，继承ActionSupport 类， 然后在 struts.xml 里面配置这个action 类
+	①我们要能通过浏览器访问到这个action 的execute 方法
+	②我们要能通过浏览器访问 action 的login 方法，并且实现表单参数的自动封装（封装到 user 对象里面去）
+	  用一个固定的值去校验表单的值对不对，如果对，跳转到 login-success.jsp 页面
+	                                          如果不对，跳转到login.jsp 页面，并显示帐号或者密码错误 
+	                                          
+6、 创建ParamAction.java 类，继承 ActionSupport 类，然后在 struts.xml 里配置这个action 类
+	① 我们要通过这个类演示struts 的三种参数自动封装的方式：  成员变量为基本数据类型、 成员变量为javabean、modeldriven
+		特别注意： 封装list 和 map 等复杂参数的时候，不仅要提供 setxxx方法，还要提供 getxxx方法
+				而且声明的类型应该使用 List 和 Map 接口，因为在封装参数的时候struts 会自己创建特定的子类
+				如果我们自己声明成 ArrayList 和  HashMap ，那么到时可能会出现问题
+	② 我们要通过这个类演示 struts 的参数类型自动转换： 
+		 string ---> java各种基本数据类型/  date类型（yyyy-MM-dd HH:mm:ss）
+	③ 要会自己去写一个 date 转换器，继承 DefaultTypeConverter
+	
+7、 要会自定义拦截器，在拦截器里面试图解决 get 提交参数的乱码问题（重点是要会写拦截器和配置拦截器）
+	（原来get乱码要使用过滤器过滤get 请求，然后使用包装的request类，重写 getparameter(name) 方法）
+	思路：这里struts 我们为了解耦，我们一般不使用 servlet原生的api 去获取参数，而是使用自动封装参数
+	 	这个自动封装参数又是来自于 servlet内部的那个 ParameterMap 集合，这个集合是被加锁了的，不允许修改
+	 	struts 会在核心过滤器中克隆 servlet 的ParameterMap 到自己的context 域，然后使用 ThreadLocal保存到本地线程
+	 	ActionContext 类本身就提供了修改 ParameterMap 的方法。我们只要遍历 servlet 那个不允许修改的 ParameterMap
+	 	重新编码所有参数，再用一个新的map 去替换本地线程里面的 parametermap 即可
+	 	
+	 	注意： 这个重新编码的操作我们不可以像以前一样在一个过滤器里面处理，如果要在一个过滤器处理的话，因为 servlet的ParameterMap 
+	 		是不可修改的，所以struts 核心过滤器最后还是克隆原来的那个 map 到本地线程
+	 		重新编码的操作必须 使用struts 的拦截器来处理，而且这个拦截器应该是在struts 克隆servlet 的parameterMap 之后（perpare阶段，还没有任何拦截器执行）
+	 		在struts 自动封装参数的拦截器执行之前完成重新编码（modeldriven/ params 这些拦截器之前）
+	 		
+
+8、 要知道三种获取Servlet api 的方式：
+	① 完全解耦：  http://localhost:8080/StrutsTest/ServletAction.action?name=hello
+	② 使用 ServletActionContext :http://localhost:8080/StrutsTest/ServletAction2.action?name=world
+	③ 实现 ServletRequestAware, 然后由struts 自动注入成员变量: http://localhost:8080/StrutsTest/ServletAction3.action?name=java
+	
+9、 要理解 ognl 表达式明白从根取值和从上下文件取值的区别，理解值栈和执行上下文actionContext 的关系【这里不演示，要求需要的时候，能看懂笔记即可】
+
+10、 struts 标签了解就行， 了解struts校验： 全局校验、单个方法校验、xml 配置校验【这里不演示，要求需要的时候，能看懂笔记即可】
+
+11、 了解怎么配置文件的上传和下载（知道怎么处理中文文件名乱码问题）【这里不演示，要求需要的时候，能看懂笔记即可】
+
+12、 jar 包没有上传到 github ， 如果需要的话要会自己去找。 
+		

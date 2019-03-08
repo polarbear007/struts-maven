@@ -1,12 +1,63 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE struts PUBLIC
+ <!DOCTYPE struts PUBLIC
 	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
 	"http://struts.apache.org/dtds/struts-2.3.dtd">
 	
 <struts>
 	<package name="hello" namespace="/" extends="struts-default">
-		<action name="helloAction_*" class="cn.itcast.action.HelloAction" method="{1}">
-			<result name="success" type="dispatcher">/jsp/success.jsp</result>
+		<interceptors>
+			<interceptor name="charsetInterceptor" class="cn.itcast.interceptor.CharsetInterceptor"/>
+			<interceptor-stack name="MyDefaultStack">
+				<interceptor-ref name="charsetInterceptor"/>
+				<interceptor-ref name="defaultStack"/>
+			</interceptor-stack>
+		</interceptors>
+		
+		<!-- 通用的异常映射处理，只是演示一下 -->
+		<global-exception-mappings>
+			<exception-mapping result="common-error" exception="java.lang.Exception"></exception-mapping>
+		</global-exception-mappings>
+	
+		<action name="HelloAction_*" class="cn.itcast.action.HelloAction" method="{1}">
+			<result name="success">/success.jsp</result>
+			<result name="login-success">/login-success.jsp</result>
+			<result name="login">/login.jsp</result>
+		</action>
+		
+		<action name="ParamAction_*" class="cn.itcast.action.ParamAction" method="{1}">
+		</action>
+		
+		<action name="ParamAction2_*" class="cn.itcast.action.ParamAction2" method="{1}">
+		</action>
+		
+		<action name="ParamAction3_*" class="cn.itcast.action.ParamAction3" method="{1}" converter="cn.itcast.convertor.DateConvertor">
+			<result name="input">/test-convertor.jsp</result>
+		</action>
+		
+		<action name="InterceptorAction_*" class="cn.itcast.action.InterceptorAction" method="{1}">
+			<interceptor-ref name="MyDefaultStack"/>
+		</action>
+		
+		<action name="ServletAction_*" class="cn.itcast.action.ServletAction" method="{1}">
+			<result name="test-servlet">/test-servlet.jsp</result>
+		</action>
+		
+		<action name="ServletAction2_*" class="cn.itcast.action.ServletAction2" method="{1}">
+			<result name="test-servlet">/test-servlet.jsp</result>
+		</action>
+		
+		<action name="ServletAction3_*" class="cn.itcast.action.ServletAction3" method="{1}">
+			<result name="test-servlet">/test-servlet.jsp</result>
+		</action>
+		
+		<action name="TestExceptionAction_*" class="cn.itcast.action.TestExceptionAction" method="{1}">
+			<!-- 这个exception-mapping 标签是指定action方法抛出指定类型的异常时，是映射到哪个 result 标签
+				 exception:  指定异常的类型，全路径名
+				 result:     对应本action中的 result 标签，或者 global-results 标签的中的 引用
+			 -->
+			<exception-mapping result="error" exception="java.lang.ArithmeticException"></exception-mapping>
+			<exception-mapping result="error" exception="java.lang.RuntimeException"></exception-mapping>
+			<!-- 指定一下 name 为 error 的result 标签 -->
+			<result name="error">/error.jsp</result>
 		</action>
 	</package>
 </struts>
